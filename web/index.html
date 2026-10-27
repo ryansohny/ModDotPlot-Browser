@@ -277,6 +277,10 @@
             <div class="feature-track-control-item feature-track-add-control">
               <button id="add-track" class="add-track-button" type="button">Add track</button>
               <small>Drop BED, GFF3, or GTF files, including gzip/BGZF files, directly on an axis, or let Add track assign one.</small>
+              <form id="track-url-form" class="track-url-form" aria-label="Load track from URL">
+                <input id="track-url" type="url" inputmode="url" placeholder="https://example.org/track.bed.gz" aria-label="Track URL" />
+                <button class="add-track-button" type="submit">Load URL</button>
+              </form>
             </div>
             <input id="track-file-input" type="file" accept=".bed,.gff,.gff3,.gtf,.gff2,.bed.gz,.gff.gz,.gff3.gz,.gtf.gz,.gff2.gz,.bed.bgz,.gff.bgz,.gff3.bgz,.gtf.bgz,.gff2.bgz,.gz,.bgz,.bgzf" multiple hidden />
           </details>

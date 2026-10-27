@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseRemoteFastaUrl } from "../src/remote-fasta";
+import { describe, expect, it, vi } from "vitest";
+import { parseRemoteFastaUrl, parseRemoteTrackUrl } from "../src/remote-fasta";
 
 describe("remote FASTA URLs", () => {
   it("normalizes the Col-CEN gzip URL used by the landing page workflow", () => {
@@ -25,6 +25,29 @@ describe("remote FASTA URLs", () => {
     ["not a url", "complete HTTPS URL"],
   ])("rejects %s", (value, message) => {
     expect(() => parseRemoteFastaUrl(value)).toThrow(message);
+  });
+
+  it("accepts same-origin HTTP URLs served by a local preview server", () => {
+    vi.stubGlobal("location", new URL("http://127.0.0.1:4178/"));
+    try {
+      expect(parseRemoteFastaUrl("http://127.0.0.1:4178/data/assembly.fa").url)
+        .toBe("http://127.0.0.1:4178/data/assembly.fa");
+      expect(() => parseRemoteFastaUrl("http://127.0.0.1:9999/assembly.fa")).toThrow("HTTPS");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("validates feature-track URLs with the same HTTPS/same-origin rule", () => {
+    expect(parseRemoteTrackUrl("https://data.example/rm.bed.gz#x"))
+      .toEqual({ url: "https://data.example/rm.bed.gz", fileName: "rm.bed.gz" });
+    expect(() => parseRemoteTrackUrl("http://data.example/rm.bed.gz")).toThrow("HTTPS");
+    vi.stubGlobal("location", new URL("http://127.0.0.1:4178/"));
+    try {
+      expect(parseRemoteTrackUrl("http://127.0.0.1:4178/data/rm.bed.gz").fileName).toBe("rm.bed.gz");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("keeps query parameters while removing fragments", () => {

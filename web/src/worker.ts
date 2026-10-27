@@ -507,7 +507,9 @@ async function loadRemoteFastas(
   if (sources.length === 0) throw new Error("At least one remote FASTA URL is required.");
   const requestedUrls = sources.map((source) => {
     const url = new URL(source.url);
-    if (url.protocol !== "https:") throw new Error("Remote FASTA URLs must use HTTPS.");
+    if (url.protocol !== "https:" && url.origin !== self.location.origin) {
+      throw new Error("Remote FASTA URLs must use HTTPS.");
+    }
     return url;
   });
   const job = datasetJob;
