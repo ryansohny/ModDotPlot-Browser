@@ -13,7 +13,8 @@ export function parseRemoteFastaUrl(value: string): RemoteFastaDownloadDescripto
   } catch {
     throw new Error("Enter a complete HTTPS URL, including https://.");
   }
-  if (url.protocol !== "https:") {
+  // Same-origin HTTP is allowed so a local preview server (e.g. over an SSH tunnel) can serve FASTA files.
+  if (url.protocol !== "https:" && url.origin !== globalThis.location?.origin) {
     throw new Error("Remote FASTA URLs must use HTTPS.");
   }
   if (url.username || url.password) {
@@ -34,6 +35,27 @@ export function parseRemoteFastaUrl(value: string): RemoteFastaDownloadDescripto
 
   url.hash = "";
   return Object.freeze({ url: url.href, fileName });
+}
+
+/** Validates a feature-track URL with the same HTTPS/same-origin rule as FASTA URLs. */
+export function parseRemoteTrackUrl(value: string): { url: string; fileName: string } {
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    throw new Error("Enter a complete track URL, including https://.");
+  }
+  if (url.protocol !== "https:" && url.origin !== globalThis.location?.origin) {
+    throw new Error("Remote track URLs must use HTTPS.");
+  }
+  if (url.username || url.password) {
+    throw new Error("Remote track URLs cannot contain embedded credentials.");
+  }
+  normalizeGitHubRawUrl(url);
+  const fileName = decodeURIComponent(url.pathname.split("/").at(-1) ?? "");
+  if (fileName.length === 0) throw new Error("The track URL must end in a file name.");
+  url.hash = "";
+  return { url: url.href, fileName };
 }
 
 function normalizeGitHubRawUrl(url: URL): void {

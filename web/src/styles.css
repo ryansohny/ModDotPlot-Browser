@@ -593,6 +593,18 @@ details[open] summary { margin-bottom: 4px; }
 }
 .add-track-button { width: 100%; margin-top: 0; }
 .feature-track-add-control { gap: 4px; }
+.track-url-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px; }
+.track-url-form input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 8px;
+  color: inherit;
+  background: var(--panel);
+  font: inherit;
+  font-size: 11px;
+}
+.track-url-form .add-track-button { width: auto; }
 .advanced-controls > label + label { margin-top: 10px; }
 .imported-track-list { display: grid; gap: 8px; }
 .imported-track-control {

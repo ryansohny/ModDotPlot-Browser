@@ -65,7 +65,7 @@ import {
   type RulerAnchor,
 } from "./ruler";
 import { sequenceAxisLabel } from "./sequence-metadata";
-import { parseRemoteFastaUrl } from "./remote-fasta";
+import { parseRemoteFastaUrl, parseRemoteTrackUrl } from "./remote-fasta";
 import {
   decideResourceAdmission,
   totalResourceBytes,
@@ -195,6 +195,8 @@ const importedTrackList = element<HTMLElement>("imported-track-list");
 const importedTrackEmpty = element<HTMLElement>("imported-track-empty");
 const addTrackButton = element<HTMLButtonElement>("add-track");
 const trackFileInput = element<HTMLInputElement>("track-file-input");
+const trackUrlForm = element<HTMLFormElement>("track-url-form");
+const trackUrlInput = element<HTMLInputElement>("track-url");
 const trackImportDialog = element<HTMLDialogElement>("track-import-dialog");
 const trackImportTitle = element<HTMLElement>("track-import-title");
 const trackImportSummary = element<HTMLElement>("track-import-summary");
@@ -298,6 +300,26 @@ for (const kind of ["gc", "cpg"] as const) {
 }
 wireTrackPositionButtons(xTrackPositionButtons);
 wireTrackPositionButtons(yTrackPositionButtons);
+trackUrlForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void loadRemoteTrack(trackUrlInput.value);
+});
+
+// ponytail: downloads the whole track into memory; fine for BED/GFF sizes, stream if tracks reach GBs.
+async function loadRemoteTrack(value: string): Promise<void> {
+  status.classList.remove("error");
+  try {
+    const { url, fileName } = parseRemoteTrackUrl(value);
+    showTrackImportStatus(`Downloading ${fileName}`);
+    // no-store: a cached response may still carry a stale Content-Encoding header.
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Could not download ${fileName} (HTTP ${response.status}).`);
+    importedTracks.importFiles([new File([await response.blob()], fileName)]);
+    trackUrlInput.value = "";
+  } catch (error) {
+    showError(error instanceof Error ? error.message : String(error));
+  }
+}
 featureTracks.onHover((hover, event) => importedTracks.showQuantitativeHover(hover, event));
 let worker: Worker;
 let sequences: SequenceMetadata[] = [];
